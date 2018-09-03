@@ -15,10 +15,11 @@ CUDA_VISIBLE_DEVICES=0 python3 main.py
 
 # Cite
 If you use this code for your research, please cite the following paper:
-
+```
   @inproceedings{zhang2018learning,  
   author = {Zhang, Yi and Xu, Jingjing and Yang, Pengcheng and Sun, Xu},  
   title = {Learning Sentiment Memories for Sentiment Modification without Parallel Data},  
   booktitle = {EMNLP 2018},  
   year = {2018}  
   }  
+ ```
