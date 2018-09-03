@@ -1,6 +1,6 @@
 ## SMAE
-
 This is the code for "Learning Sentiment Memories for Sentiment Modification without Parallel Data".
+
 ## Environment and Dependency
  - Ubuntu 16.04
  - Python 3.5
@@ -11,7 +11,8 @@ This is the code for "Learning Sentiment Memories for Sentiment Modification wit
   [yelp](https://www.yelp.com/dataset/challenge)
   
 ## Usage
-CUDA_VISIBLE_DEVICES=0 python3 main.py
+CUDA_VISIBLE_DEVICES=0 python3 main.py   
+To run this code, you first need to process the dataset into the specific format. We provide the sample file. During running, several files will be created.
 
 ## Cite
 If you use this code for your research, please cite the following paper:
