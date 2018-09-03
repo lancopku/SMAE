@@ -18,8 +18,8 @@ from cnn_classifier import *
 FLAGS = tf.app.flags.FLAGS
 
 # Where to find data
-tf.app.flags.DEFINE_string('data_path', '/home/zhangyi/dataset/review_generation_dataset/train/*', 'Path expression to tf.Example datafiles. Can include wildcards to access multiple datafiles.')
-tf.app.flags.DEFINE_string('vocab_path', '/home/zhangyi/dataset/review_generation_dataset/vocab.txt', 'Path expression to text vocabulary file.')
+tf.app.flags.DEFINE_string('data_path', './dataset/train/*', 'Path expression to tf.Example datafiles. Can include wildcards to access multiple datafiles.')
+tf.app.flags.DEFINE_string('vocab_path', './dataset/vocab.txt', 'Path expression to text vocabulary file.')
 # Important settings
 tf.app.flags.DEFINE_string('mode', 'train', 'must be one of train/eval/decode')
 # Where to save output
@@ -64,9 +64,9 @@ def setup_training_classifier(model):
     model.build_graph()  # build the graph
     saver = tf.train.Saver(max_to_keep=5)  # we use this to load checkpoints for decoding
     sess = tf.Session(config=util.get_config())
-    #init = tf.global_variables_initializer()
-    #sess.run(init)
-    util.load_ckpt(saver, sess, ckpt_dir="train-classifier")
+    init = tf.global_variables_initializer()
+    sess.run(init)
+    #util.load_ckpt(saver, sess, ckpt_dir="train-classifier")
     return sess, saver,train_dir
 
 def run_train_cnn_classifier(model, batcher, max_run_epoch,  sess,saver, train_dir):
@@ -112,9 +112,9 @@ def setup_training_generator(model):
   model.build_graph() # build the graph
   saver = tf.train.Saver(max_to_keep=5)  # we use this to load checkpoints for decoding
   sess = tf.Session(config=util.get_config())
-  #init = tf.global_variables_initializer()
-  #sess.run(init)
-  util.load_ckpt(saver, sess, ckpt_dir="train-generator")
+  init = tf.global_variables_initializer()
+  sess.run(init)
+  #util.load_ckpt(saver, sess, ckpt_dir="train-generator")
 
   return sess, saver,train_dir
 
@@ -127,9 +127,9 @@ def setup_training_classification(model):
 
     saver = tf.train.Saver(max_to_keep=5)  # we use this to load checkpoints for decoding
     sess = tf.Session(config=util.get_config())
-    #init = tf.global_variables_initializer()
-    #sess.run(init)
-    util.load_ckpt(saver, sess, ckpt_dir="train-classification")
+    init = tf.global_variables_initializer()
+    sess.run(init)
+    #util.load_ckpt(saver, sess, ckpt_dir="train-classification")
 
     return sess, saver,train_dir
 
@@ -291,7 +291,7 @@ def main(unused_argv):
     cnn_classifier = CNN(config)
     cnn_batcher = ClaBatcher(hps_discriminator, vocab)
     sess_cnn, saver_cnn, train_dir_cnn = setup_training_classifier(cnn_classifier)
-    run_train_cnn_classifier(cnn_classifier, cnn_batcher, 0, sess_cnn, saver_cnn, train_dir_cnn)
+    run_train_cnn_classifier(cnn_classifier, cnn_batcher, 10, sess_cnn, saver_cnn, train_dir_cnn)
     #util.load_ckpt(saver_cnn, sess_cnn, ckpt_dir="train-classifier")
     acc = run_test_classification(cnn_classifier, cnn_batcher, sess_cnn, saver_cnn, str('last'))
     print("the last stored cnn model acc = ", acc)
@@ -301,7 +301,7 @@ def main(unused_argv):
     model_class = Classification(hps_discriminator, vocab)
     cla_batcher = AttenBatcher(hps_discriminator, vocab) # read from train_conf
     sess_cls, saver_cls, train_dir_cls = setup_training_classification(model_class)
-    run_pre_train_classification(model_class, cla_batcher, 0, sess_cls, saver_cls, train_dir_cls)
+    run_pre_train_classification(model_class, cla_batcher, 10, sess_cls, saver_cls, train_dir_cls)
     #util.load_ckpt(saver_cls, sess_cls, ckpt_dir="train-classification")
     acc = run_test_classification(model_class, cla_batcher, sess_cls, saver_cls, str("final_acc"))
     print("the last stored attention model acc = ", acc)
@@ -310,9 +310,8 @@ def main(unused_argv):
     generated = Generate_training_sample(model_class, vocab, cla_batcher, sess_cls)
 
     print("Generating training examples......")
-    #generated.generate_training_example("train_filtered")  #wirte train
-    #generated.generator_validation_example("valid_filtered")
-    #generated.generator_test_example("test_filtered")
+    generated.generate_training_example("train_filtered")  #wirte train
+    generated.generator_validation_example("valid_filtered")
 
     model = Seq2seq_AE(hps_generator, vocab)
     # Create a batcher object that will create minibatches of data
@@ -322,7 +321,7 @@ def main(unused_argv):
 
     generated = Generated_sample(model, vocab, batcher, sess_ge)
     print("Start pre-training generator......")
-    run_pre_train_auto_encoder(model, batcher, 0, sess_ge, saver_ge, train_dir_ge, generated, cnn_classifier, sess_cnn, cla_batcher)
+    run_pre_train_auto_encoder(model, batcher, 20, sess_ge, saver_ge, train_dir_ge, generated, cnn_classifier, sess_cnn, cla_batcher)
 
 if __name__ == '__main__':
   tf.app.run()
