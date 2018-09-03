@@ -310,9 +310,8 @@ def main(unused_argv):
     generated = Generate_training_sample(model_class, vocab, cla_batcher, sess_cls)
 
     print("Generating training examples......")
-    #generated.generate_training_example("train_filtered")  #wirte train
-    #generated.generator_validation_example("valid_filtered")
-    #generated.generator_test_example("test_filtered")
+    generated.generate_training_example("train_filtered")  #wirte train
+    generated.generator_validation_example("valid_filtered")
 
     model = Seq2seq_AE(hps_generator, vocab)
     # Create a batcher object that will create minibatches of data
