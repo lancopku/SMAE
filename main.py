@@ -18,7 +18,8 @@ from cnn_classifier import *
 FLAGS = tf.app.flags.FLAGS
 
 # Where to find data
-tf.app.flags.DEFINE_string('data_path', './dataset/train/*', 'Path expression to tf.Example datafiles. Can include wildcards to access multiple datafiles.')
+tf.app.flags.DEFINE_string('train_data_path', './dataset/train/*', 'training files.')
+tf.app.flags.DEFINE_string('valid_data_path', './dataset/train/*', 'validation files.')
 tf.app.flags.DEFINE_string('vocab_path', './dataset/vocab.txt', 'Path expression to text vocabulary file.')
 # Important settings
 tf.app.flags.DEFINE_string('mode', 'train', 'must be one of train/eval/decode')
@@ -269,27 +270,11 @@ def main(unused_argv):
 
     vocab = Vocab(FLAGS.vocab_path, FLAGS.vocab_size)  # create a vocabulary
 
-    # Make a namedtuple hps, containing the values of the hyperparameters that the model needs
-    hparam_list = ['mode', 'lr', 'adagrad_init_acc', 'rand_unif_init_mag', 'trunc_norm_init_std', 'max_grad_norm',
-                   'hidden_dim', 'emb_dim', 'batch_size', 'max_dec_steps', 'max_enc_steps']
-    hps_dict = {}
-    for key, val in FLAGS.__flags.items():  # for each flag
-        if key in hparam_list:  # if it's in the list
-            hps_dict[key] = val  # add it to the dict
-    hps_generator = namedtuple("HParams", hps_dict.keys())(**hps_dict)
-
-    hparam_list = ['lr', 'adagrad_init_acc', 'rand_unif_init_mag', 'trunc_norm_init_std', 'max_grad_norm',
-                   'hidden_dim', 'emb_dim', 'batch_size', 'max_dec_steps']
-    hps_dict = {}
-    for key, val in FLAGS.__flags.items():  # for each flag
-        if key in hparam_list:  # if it's in the list
-            hps_dict[key] = val  # add it to the dict
-    hps_discriminator = namedtuple("HParams", hps_dict.keys())(**hps_dict)
-
     tf.set_random_seed(6)  # a seed value for randomness
 
     cnn_classifier = CNN(config)
-    cnn_batcher = ClaBatcher(hps_discriminator, vocab)
+    #cnn_batcher = ClaBatcher(hps_discriminator, vocab)
+    cnn_batcher = ClaBatcher(FLAGS, vocab)
     sess_cnn, saver_cnn, train_dir_cnn = setup_training_classifier(cnn_classifier)
     run_train_cnn_classifier(cnn_classifier, cnn_batcher, 10, sess_cnn, saver_cnn, train_dir_cnn)
     #util.load_ckpt(saver_cnn, sess_cnn, ckpt_dir="train-classifier")
@@ -298,8 +283,8 @@ def main(unused_argv):
     generate_confident_examples(cnn_classifier, cnn_batcher, sess_cnn) ## train_conf
 
     print("Start pre-training attention classification......")
-    model_class = Classification(hps_discriminator, vocab)
-    cla_batcher = AttenBatcher(hps_discriminator, vocab) # read from train_conf
+    model_class = Classification(FLAGS, vocab)
+    cla_batcher = AttenBatcher(FLAGS, vocab) # read from train_conf
     sess_cls, saver_cls, train_dir_cls = setup_training_classification(model_class)
     run_pre_train_classification(model_class, cla_batcher, 10, sess_cls, saver_cls, train_dir_cls)
     #util.load_ckpt(saver_cls, sess_cls, ckpt_dir="train-classification")
@@ -313,14 +298,14 @@ def main(unused_argv):
     generated.generate_training_example("train_filtered")  #wirte train
     generated.generator_validation_example("valid_filtered")
 
-    model = Seq2seq_AE(hps_generator, vocab)
+    model = Seq2seq_AE(FLAGS, vocab)
     # Create a batcher object that will create minibatches of data
-    batcher = GenBatcher(vocab, hps_generator) ##read from train
+    batcher = GenBatcher(vocab, FLAGS) ##read from train
 
     sess_ge, saver_ge, train_dir_ge = setup_training_generator(model)
 
     generated = Generated_sample(model, vocab, batcher, sess_ge)
-    print("Start pre-training generator......")
+    print("Start training generator......")
     run_pre_train_auto_encoder(model, batcher, 20, sess_ge, saver_ge, train_dir_ge, generated, cnn_classifier, sess_cnn, cla_batcher)
 
 if __name__ == '__main__':
