@@ -12,7 +12,7 @@ This is the code for "Learning Sentiment Memories for Sentiment Modification wit
   
 ## Usage
 CUDA_VISIBLE_DEVICES=0 python3 main.py   
-To run this code, you first need to process the dataset into the specific format. We provide the sample file. During running, several files will be created.
+To run this code, you first need to process the dataset into the specific format. We provide the sample file in dataset. During running, several files will be created.
 
 ## Cite
 If you use this code for your research, please cite the following paper:
