@@ -19,7 +19,7 @@ FLAGS = tf.app.flags.FLAGS
 
 # Where to find data
 tf.app.flags.DEFINE_string('train_data_path', './dataset/train/*', 'training files.')
-tf.app.flags.DEFINE_string('valid_data_path', './dataset/train/*', 'validation files.')
+tf.app.flags.DEFINE_string('valid_data_path', './dataset/valid/*', 'validation files.')
 tf.app.flags.DEFINE_string('vocab_path', './dataset/vocab.txt', 'Path expression to text vocabulary file.')
 # Important settings
 tf.app.flags.DEFINE_string('mode', 'train', 'must be one of train/eval/decode')
