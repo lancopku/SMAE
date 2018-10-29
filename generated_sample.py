@@ -68,8 +68,8 @@ class Generated_sample(object):
         all = 0
 
 
-        #while step < len(batches):
-        while step < 310:
+        while step < len(batches):
+        #while step < 310:
             cla_input =[]
 
             batch = batches[step]
