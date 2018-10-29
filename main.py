@@ -136,9 +136,6 @@ def setup_training_classification(model):
 
 def run_test_classification(model, batcher, sess, saver, train_step):
     tf.logging.info("starting run testing discriminator")
-
-    #error_discriminator_file = codecs.open(train_step+ "error_classification.txt","w","utf-8")
-
     batches = batcher.get_batches("valid")
     step = 0
     right =0.0
@@ -151,17 +148,12 @@ def run_test_classification(model, batcher, sess, saver, train_step):
         error_label = error_label
         all += number
         right += right_s
-        for i in range(len(error_list)):
-            a ={"example": error_list[i], "wrong label": str(error_label[i])}
-            #string_a = json.dumps(a)
-            #error_discriminator_file.write(string_a+"\n")
-    #error_discriminator_file.close()
     return right/all
 
 def run_pre_train_classification(model, bachter, max_run_epoch, sess,saver, train_dir):
     tf.logging.info("starting run_pre_train_discriminator")
     epoch = 0
-    best_result = 0.8
+    best_result = 0.0
     while epoch < max_run_epoch:
         batches = bachter.get_batches(mode='train')
         step = 0
@@ -248,6 +240,7 @@ def run_pre_train_auto_encoder(model, batcher, max_run_epoch, sess, saver, train
     generatored.generator_validation_positive_example(
         "valid-generated/" + str(epoch) + "epoch_step" + str("final") + "_temp_positive", batcher, model_class, sess_cls,
         cla_batcher)
+
     print ("test set result")
     generatored.generator_validation_negative_example(
         "test-generated-transfer/" + str(epoch) + "epoch_step" + str("final") + "_temp_positive", batcher, model_class,
@@ -276,27 +269,25 @@ def main(unused_argv):
     #cnn_batcher = ClaBatcher(hps_discriminator, vocab)
     cnn_batcher = ClaBatcher(FLAGS, vocab)
     sess_cnn, saver_cnn, train_dir_cnn = setup_training_classifier(cnn_classifier)
-    run_train_cnn_classifier(cnn_classifier, cnn_batcher, 10, sess_cnn, saver_cnn, train_dir_cnn)
+    run_train_cnn_classifier(cnn_classifier, cnn_batcher, 15, sess_cnn, saver_cnn, train_dir_cnn)
     #util.load_ckpt(saver_cnn, sess_cnn, ckpt_dir="train-classifier")
     acc = run_test_classification(cnn_classifier, cnn_batcher, sess_cnn, saver_cnn, str('last'))
-    print("the last stored cnn model acc = ", acc)
+    print("The accuracy of sentiment classifier is {:.3f}".format(acc))
     generate_confident_examples(cnn_classifier, cnn_batcher, sess_cnn) ## train_conf
 
-    print("Start pre-training attention classification......")
+    print("Start training emotional words detection model...")
     model_class = Classification(FLAGS, vocab)
     cla_batcher = AttenBatcher(FLAGS, vocab) # read from train_conf
     sess_cls, saver_cls, train_dir_cls = setup_training_classification(model_class)
-    run_pre_train_classification(model_class, cla_batcher, 10, sess_cls, saver_cls, train_dir_cls)
+    run_pre_train_classification(model_class, cla_batcher, 15, sess_cls, saver_cls, train_dir_cls)
     #util.load_ckpt(saver_cls, sess_cls, ckpt_dir="train-classification")
     acc = run_test_classification(model_class, cla_batcher, sess_cls, saver_cls, str("final_acc"))
-    print("the last stored attention model acc = ", acc)
-    acc = run_test_classification(cnn_classifier, cla_batcher, sess_cnn, saver_cnn, str("final_acc"))
-    print("the last stored classifier model acc = ", acc)
+    print("The sentiment accuracy of the  ", acc)
     generated = Generate_training_sample(model_class, vocab, cla_batcher, sess_cls)
 
     print("Generating training examples......")
     generated.generate_training_example("train_filtered")  #wirte train
-    generated.generator_validation_example("valid_filtered")
+    generated.generator_valid_test_example("valid_test_filtered")
 
     model = Seq2seq_AE(FLAGS, vocab)
     # Create a batcher object that will create minibatches of data
@@ -306,7 +297,7 @@ def main(unused_argv):
 
     generated = Generated_sample(model, vocab, batcher, sess_ge)
     print("Start training generator......")
-    run_pre_train_auto_encoder(model, batcher, 20, sess_ge, saver_ge, train_dir_ge, generated, cnn_classifier, sess_cnn, cla_batcher)
+    run_pre_train_auto_encoder(model, batcher, 15, sess_ge, saver_ge, train_dir_ge, generated, cnn_classifier, sess_cnn, cla_batcher)
 
 if __name__ == '__main__':
   tf.app.run()
