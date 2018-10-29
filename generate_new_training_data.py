@@ -91,14 +91,14 @@ class Generate_training_sample(object):
                 counter += 1  # this is how many examples we've decoded
 
 
-    def generator_validation_example(self, validation_positive_dir):
+    def generator_valid_test_example(self, validation_positive_dir):
         self.temp_positive_dir = validation_positive_dir
         if not os.path.exists(self.temp_positive_dir): os.mkdir(self.temp_positive_dir)
         shutil.rmtree(self.temp_positive_dir)
         if not os.path.exists(self.temp_positive_dir): os.mkdir(self.temp_positive_dir)
         counter = 0
         for step in range(len(self.valid_batches)):
-            decode_result =  self._model.run_attention_weight_ypred_auc(self._sess, self.valid_batches[step])
+            decode_result = self._model.run_attention_weight_ypred_auc(self._sess, self.valid_batches[step])
             decode_result['y_pred_auc'] = decode_result['y_pred_auc'].tolist()
 
             for i in range(FLAGS.batch_size):
