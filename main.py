@@ -90,20 +90,20 @@ def run_train_cnn_classifier(model, batcher, max_run_epoch,  sess,saver, train_d
             train_step = results['global_step']  # we need this to update our running average loss
             if train_step % 1000 == 0:
                 t1 = time.time()
-                tf.logging.info('seconds for %d training discriminator step: %.3f ', train_step, (t1 - t0) / 100)
+                tf.logging.info('seconds for %d training classifier step: %.3f ', train_step, (t1 - t0) / 100)
                 t0 = time.time()
                 tf.logging.info('loss: %f', loss_window / 100)  # print the loss to screen
                 loss_window = 0.0
             if train_step % 5000 == 0:
                 acc = run_test_classification(model, batcher, sess, saver, str(train_step))
-                tf.logging.info('cnn evaluate valid acc: %.6f', acc)  # print the loss to screen
+                tf.logging.info('Accuracy of cnn classifier on valid dataset is {:.3f}'.format(acc))  # print the loss to screen
                 if acc > best_result:
                     saver.save(sess, train_dir + "/model", global_step=train_step)
                     best_result = acc
         epoch += 1
         tf.logging.info("finished %d epoches", epoch)
     acc = run_test_classification(model, batcher, sess, saver, str('final'))
-    tf.logging.info('cnn evaluate final valid acc: %.6f', acc)  # print the loss to screen
+    tf.logging.info('Final accuracy of cnn classifier on valid dataset is {:.3f}'.format(acc))  # print the loss to screen
 
 
 def setup_training_generator(model):
@@ -119,7 +119,7 @@ def setup_training_generator(model):
 
   return sess, saver,train_dir
 
-def setup_training_classification(model):
+def setup_training_attention_classification(model):
     """Does setup before starting training (run_training)"""
     train_dir = os.path.join(FLAGS.log_root, "train-classification")
     if not os.path.exists(train_dir): os.makedirs(train_dir)
@@ -135,7 +135,7 @@ def setup_training_classification(model):
     return sess, saver,train_dir
 
 def run_test_classification(model, batcher, sess, saver, train_step):
-    tf.logging.info("starting run testing discriminator")
+    tf.logging.info("starting run testing emotional words detection model...")
     batches = batcher.get_batches("valid")
     step = 0
     right =0.0
@@ -150,8 +150,8 @@ def run_test_classification(model, batcher, sess, saver, train_step):
         right += right_s
     return right/all
 
-def run_pre_train_classification(model, bachter, max_run_epoch, sess,saver, train_dir):
-    tf.logging.info("starting run_pre_train_discriminator")
+def run_train_attention_classification(model, bachter, max_run_epoch, sess,saver, train_dir):
+    tf.logging.info("starting run training emotional words detection model...")
     epoch = 0
     best_result = 0.0
     while epoch < max_run_epoch:
@@ -189,8 +189,8 @@ def run_pre_train_classification(model, bachter, max_run_epoch, sess,saver, trai
     acc = run_test_classification(model, bachter, sess, saver, str("final acc"))
     tf.logging.info('final sigmoid attention valid acc: %.6f', acc)  # print the loss to screen
 
-def run_pre_train_auto_encoder(model, batcher, max_run_epoch, sess, saver, train_dir, generatored,model_class,sess_cls,cla_batcher):
-    tf.logging.info("starting run_pre_train_generator")
+def run_train_auto_encoder(model, batcher, max_run_epoch, sess, saver, train_dir, generatored,model_class,sess_cls,cla_batcher):
+    tf.logging.info("starting run training generator...")
     epoch = 0
     best_overall = 0
     best_bleu = 0.0
@@ -220,10 +220,10 @@ def run_pre_train_auto_encoder(model, batcher, max_run_epoch, sess, saver, train
                 #bleu_score = generatored.compute_BLEU(str(train_step))
                 #tf.logging.info('bleu: %f', bleu_score)  # print the loss to screen
                 model.train_or_test = 'test'
-                tranfer_acc, bleu = generatored.generator_validation_negative_example("valid-generated-transfer/" + str(epoch) + "epoch_step" + str(step) + "_temp_positive",
+                tranfer_acc, bleu = generatored.generator_validation_transfer_example("valid-generated-transfer/" + str(epoch) + "epoch_step" + str(step) + "_transfer",
                                                                                       batcher, model_class,sess_cls,cla_batcher,
                                                                                       'valid-transfer')
-                generatored.generator_validation_positive_example("valid-generated/" + str(epoch) + "epoch_step" + str(step) + "_temp_positive",
+                generatored.generator_validation_original_example("valid-generated/" + str(epoch) + "epoch_step" + str(step) + "_original",
                                                                   batcher, model_class,sess_cls,cla_batcher)
                 model.train_or_test = 'train'
                 current_overall = 2 * tranfer_acc * bleu / (tranfer_acc + bleu)
@@ -233,16 +233,16 @@ def run_pre_train_auto_encoder(model, batcher, max_run_epoch, sess, saver, train
                     best_bleu = bleu
         epoch += 1
         tf.logging.info("finished %d epoches", epoch)
-    print ("final auto-encoder test")
-    generatored.generator_validation_negative_example("valid-generated-transfer/" + str(epoch) + "epoch_step" + str("final") + "_temp_positive", batcher, model_class,
+    print ("Testing auto-encoder on valid set...")
+    generatored.generator_validation_transfer_example("valid-generated-transfer/" + str(epoch) + "epoch_step" + str("final") + "_temp_positive", batcher, model_class,
         sess_cls, cla_batcher,  'valid-transfer')
 
-    generatored.generator_validation_positive_example(
-        "valid-generated/" + str(epoch) + "epoch_step" + str("final") + "_temp_positive", batcher, model_class, sess_cls,
+    generatored.generator_validation_original_example(
+        "valid-generated/" + str(epoch) + "epoch_step" + str("final") + "_original", batcher, model_class, sess_cls,
         cla_batcher)
 
-    print ("test set result")
-    generatored.generator_validation_negative_example(
+    print ("Testing auto-encoder on test set...")
+    generatored.generator_validation_transfer_example(
         "test-generated-transfer/" + str(epoch) + "epoch_step" + str("final") + "_temp_positive", batcher, model_class,
         sess_cls, cla_batcher, 'test-transfer')
 
@@ -278,11 +278,11 @@ def main(unused_argv):
     print("Start training emotional words detection model...")
     model_class = Classification(FLAGS, vocab)
     cla_batcher = AttenBatcher(FLAGS, vocab) # read from train_conf
-    sess_cls, saver_cls, train_dir_cls = setup_training_classification(model_class)
-    run_pre_train_classification(model_class, cla_batcher, 15, sess_cls, saver_cls, train_dir_cls)
+    sess_cls, saver_cls, train_dir_cls = setup_training_attention_classification(model_class)
+    run_train_attention_classification(model_class, cla_batcher, 15, sess_cls, saver_cls, train_dir_cls)
     #util.load_ckpt(saver_cls, sess_cls, ckpt_dir="train-classification")
     acc = run_test_classification(model_class, cla_batcher, sess_cls, saver_cls, str("final_acc"))
-    print("The sentiment accuracy of the  ", acc)
+    print("The sentiment classification accuracy of the emotional words detection model is {:.3f}".format(acc))
     generated = Generate_training_sample(model_class, vocab, cla_batcher, sess_cls)
 
     print("Generating training examples......")
@@ -297,7 +297,7 @@ def main(unused_argv):
 
     generated = Generated_sample(model, vocab, batcher, sess_ge)
     print("Start training generator......")
-    run_pre_train_auto_encoder(model, batcher, 15, sess_ge, saver_ge, train_dir_ge, generated, cnn_classifier, sess_cnn, cla_batcher)
+    run_train_auto_encoder(model, batcher, 15, sess_ge, saver_ge, train_dir_ge, generated, cnn_classifier, sess_cnn, cla_batcher)
 
 if __name__ == '__main__':
   tf.app.run()
