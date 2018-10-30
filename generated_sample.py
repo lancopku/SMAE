@@ -47,7 +47,7 @@ class Generated_sample(object):
         write_positive_file.write(string_ + "\n")
         write_positive_file.close()
 
-    def generator_validation_negative_example(self, path, batcher, model_class,sess_cls, cla_batcher, mode):
+    def generator_validation_transfer_example(self, path, batcher, model_class,sess_cls, cla_batcher, mode):
 
         if not os.path.exists(path): os.mkdir(path)
         shutil.rmtree(path)
@@ -124,7 +124,7 @@ class Generated_sample(object):
 
         return transfer_acc, bleu
 
-    def generator_validation_positive_example(self, path, batcher, model_class, sess_cls, cla_batcher):
+    def generator_validation_original_example(self, path, batcher, model_class, sess_cls, cla_batcher):
 
         if not os.path.exists(path): os.mkdir(path)
 
@@ -193,57 +193,4 @@ class Generated_sample(object):
 
         tf.logging.info("valid acc: " + str(right * 1.0 / all))
         tf.logging.info("BLEU: " + str(corpus_bleu(list_ref, list_pre)))
-
-    '''def compute_BLEU(self, train_step):
-
-        counter = 0
-        step = 0
-
-        t0 = time.time()
-        batches = self.valid_batches
-        list_hop = []
-        list_ref = []
-        list_score = []
-
-        while step <  500:
-
-            batch = batches[step]
-            step += 1
-
-            decode_result = self._model.max_generator(self._sess, batch)
-
-            for i in range(FLAGS.batch_size):
-
-                original_review = batch.original_reviews[i]  # string
-                #list_ref.append(original_review)
-                #tf.logging.info (decode_result['generated'][0][i])
-                output_ids = [int(t) for t in decode_result['generated'][i]][1:]
-                decoded_words = data.outputids2words(output_ids, self._vocab, None)
-                # Remove the [STOP] token from decoded_words, if necessary
-                try:
-                    fst_stop_idx = decoded_words.index(data.STOP_DECODING)  # index of the (first) [STOP] symbol
-                    decoded_words = decoded_words[:fst_stop_idx]
-                except ValueError:
-                    decoded_words = decoded_words
-                decoded_output = ' '.join(decoded_words)  # single string
-                list_hop.append(decoded_output)
-                list_ref.append(original_review)
-                list_score.append(batch.labels[i])
-                #self.write_negtive_to_json(original_review, decoded_output, counter)
-
-                #counter += 1  # this is how many examples we've decoded
-        file_temp = open(train_step+"_temp_result.txt",'w')
-        for i, hop in enumerate(list_hop):
-            file_temp.write(str(list_score[i])+": "+hop+"\n")
-        file_temp.close()
-       
-
-        #print (new_sen_list)
-
-
-
-        #bleu_score = corpus_bleu(new_ref_ref, new_sen_list)
-        t1 = time.time()
-        tf.logging.info('seconds for test generator: %.3f ', (t1 - t0))
-        return 0'''
 
