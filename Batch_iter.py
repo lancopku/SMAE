@@ -152,12 +152,12 @@ class GenBatcher(object):
         self._hps = hps
 
         self.train_queue_positive = self.fill_example_queue("train_filtered/*", mode="train", target_score=1)
-        self.valid_queue_positive = self.fill_example_queue("valid_filtered/*", mode="valid", target_score=1, start_filenumber=0, end_filenumber=20)
-        self.test_queue_positive = self.fill_example_queue("valid_filtered/*", mode="test", target_score=1, start_filenumber=20, end_filenumber=40)
+        self.valid_queue_positive = self.fill_example_queue("valid_test_filtered/*", mode="valid", target_score=1, start_filenumber=0, end_filenumber=20)
+        self.test_queue_positive = self.fill_example_queue("valid_test_filtered/*", mode="test", target_score=1, start_filenumber=20, end_filenumber=40)
 
         self.train_queue_negative = self.fill_example_queue("train_filtered/*", mode="train", target_score=0)
-        self.valid_queue_negative = self.fill_example_queue("valid_filtered/*", mode="valid", target_score=0, start_filenumber=0, end_filenumber=20)
-        self.test_queue_negative = self.fill_example_queue("valid_filtered/*", mode="test", target_score=0, start_filenumber=20, end_filenumber=40)
+        self.valid_queue_negative = self.fill_example_queue("valid_test_filtered/*", mode="valid", target_score=0, start_filenumber=0, end_filenumber=20)
+        self.test_queue_negative = self.fill_example_queue("valid_test_filtered/*", mode="test", target_score=0, start_filenumber=20, end_filenumber=40)
 
         self.train_batch = self.create_batch(mode="train")
         self.valid_batch = self.create_batch(mode="valid", shuffleis=False)
