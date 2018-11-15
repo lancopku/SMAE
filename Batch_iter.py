@@ -178,7 +178,7 @@ class GenBatcher(object):
             num_batches_negative = int(len(self.valid_queue_positive) / self._hps.batch_size)
         elif mode == 'test-transfer':
             num_batches_positive = int(len(self.test_queue_negative) / self._hps.batch_size)
-            num_batches_negative = int(len(self.valid_queue_positive) / self._hps.batch_size)
+            num_batches_negative = int(len(self.test_queue_positive) / self._hps.batch_size)
 
         for i in range(0, num_batches_positive):
             batch = []
